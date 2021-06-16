@@ -1,6 +1,7 @@
 ﻿@page "/Order/Display/{Id:int}"
 @inject IFoodData foodData
 @inject IOrderData orderData
+@using  BlazorServerDemoApp.Models
 
 <h3>Display</h3>
 
@@ -34,18 +35,29 @@ else
             </tr>
         </tbody>
     </table>
-    <EditForm>
+    <EditForm Model="@updateModel">
+        <DataAnnotationsValidator />
+        <ValidationSummary Model="@updateModel" />
+        <div class="form-group">
+            <label class="control-label">Name of the Order</label>
+            <InputText @bind-Value="updateModel.OrderName" class="form-control" />
+            <ValidationMessage For="@(()=>updateModel.OrderName)" class="text-danger" />
+        </div>
+        <div class="form-group">
+            <input type="submit" class="btn btn-primary" value="Order Food" />
+        </div>
 
-    </EditForm>    
+    </EditForm>
 }
 
-@code 
+@code
 {
 
     [Parameter]
     public int Id { get; set; }
     private OrderModel order;
     private string itemPurchased;
+    private OrderUpdateModel updateModel = new OrderUpdateModel();
 
     protected override async Task OnInitializedAsync()
     {
@@ -55,8 +67,14 @@ else
         {
             var food = await foodData.GetFood();
             itemPurchased = food.Where(f => f.Id.Equals(order.FoodId)).FirstOrDefault()?.Title;
+
+            updateModel.Id = order.Id;
+            updateModel.OrderName = order.OrderName;
         }
     }
 
-
+    private async Task HandleValidSubmit() 
+    {
+        await orderData.UpdateOrderName(updateModel.Id, updateModel.OrderName);
+    }
 }
